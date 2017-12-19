@@ -8,6 +8,7 @@ The Dockerfiles create images with
 * GNU screen settings
 * build-essential (gcc, make, ...)
 * tree and htop
+* curl and wget
 
 The resulting image fits *my* needs. Feel free to use them if you want to.
 
