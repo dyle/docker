@@ -1,0 +1,36 @@
+set mouse=""
+set statusline=[%n]:%F%m%r%h%w\ %=\ line=%04l\ col=%04v\ [%p%%]"
+set laststatus=2
+set number
+set incsearch
+set shiftwidth=4
+set paste
+set nowrap
+set autoindent
+set autochdir
+set textwidth=0
+set showtabline=2
+set tabpagemax=20
+set guitablabel=%M\ %t
+set novisualbell
+set noerrorbells
+set cursorline
+set hlsearch
+set tabstop=4 softtabstop=0 expandtab shiftwidth=4 smarttab
+set autochdir
+set scroll=1
+set ttimeoutlen=0
+set ignorecase
+
+color elflord
+syntax on
+
+hi StatusLine cterm=None ctermbg=DarkBlue ctermfg=White
+hi StatusLineNC cterm=None ctermbg=Grey ctermfg=DarkGrey
+au InsertEnter * hi StatusLine cterm=None ctermbg=Red ctermfg=White
+au InsertLeave * hi StatusLine cterm=None ctermbg=DarkBlue ctermfg=White
+
+map <F2> gv
+
+cd %:p:h
+

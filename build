@@ -1,0 +1,59 @@
+#!/bin/bash
+
+# argument parsing
+while :; do                                                                                                                                                                                                                                                                                                 
+                                                                                                                                                                                                                                                                                                            
+    case "$1" in                                                                                                                                                                                                                                                                                            
+                                                                                                                                                                                                                                                                                                            
+    "-h"|"--help")                                                                                                                                                                                                                                                                                          
+        echo "build - Build Docker image"
+        echo ""
+        echo "Usage: $(basename $0) [OPTIONS] TAG FILE"
+        echo ""
+        echo "Options:"
+        echo " -h [--help]        Print this help."
+        echo ""
+        echo "Arguments:"
+        echo "TAG is the tag name for the Docker image."
+		echo "FILE is the Dockerfile."
+        echo ""
+        exit 0
+        ;;
+
+    *)
+        if [[ ${1:0:1} = '-' ]]; then
+            echo "Unknown option: $1"
+            echo "Type --help for help."
+            exit 1
+        fi
+        break
+
+    esac
+
+    shift
+
+done
+
+if [[ $(which docker | wc -l) == 0 ]]; then
+    echo 'Docker is not installed.'
+    echo 'Please install docker.'
+    exit 1
+fi
+
+TAG="$1"
+FILE="$2"
+
+if [[ ${TAG} == "" ]]; then
+    echo 'TAG for docker image missing.'
+    echo 'Type --help for help.'
+	exit 1
+fi
+
+if [[ ${FILE} == "" ]]; then
+    echo 'FILE for Dockerfile missing.'
+    echo 'Type --help for help.'
+	exit 1
+fi
+
+docker build --tag ${TAG} --file ${FILE} .
+

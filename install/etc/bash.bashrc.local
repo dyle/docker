@@ -1,0 +1,69 @@
+# ----------------------------------------------------------------------
+# additinal bashrc settings of dyle
+#
+
+# vim is our favorite
+alias vi='vim'
+
+# Set colorful PS1 only on colorful terminals.
+# dircolors --print-database uses its own built-in database
+# instead of using /etc/DIR_COLORS.  Try to use the external file
+# first to take advantage of user additions.  Use internal bash
+# globbing instead of external grep binary.
+safe_term=${TERM//[^[:alnum:]]/?}   # sanitize TERM
+match_lhs=""
+[[ -f ~/.dir_colors   ]] && match_lhs="${match_lhs}$(<~/.dir_colors)"
+[[ -f /etc/DIR_COLORS ]] && match_lhs="${match_lhs}$(</etc/DIR_COLORS)"
+[[ -z ${match_lhs}    ]] \
+	&& type -P dircolors >/dev/null \
+	&& match_lhs=$(dircolors --print-database)
+[[ $'\n'${match_lhs} == *$'\n'"TERM "${safe_term}* ]] && use_color=true
+
+# enable bash completion
+if [ -f /usr/share/bash-completion/bash_completion ]; then
+    . /usr/share/bash-completion/bash_completion
+elif [ -f /etc/bash_completion ]; then
+    . /etc/bash_completion
+fi
+
+# our own prompting
+if ${use_color} ; then
+	# Enable colors for ls, etc.  Prefer ~/.dir_colors #64489
+	if type -P dircolors >/dev/null ; then
+		if [[ -f ~/.dir_colors ]] ; then
+			eval $(dircolors -b ~/.dir_colors)
+		elif [[ -f /etc/DIR_COLORS ]] ; then
+			eval $(dircolors -b /etc/DIR_COLORS)
+		fi
+	fi
+
+	if [[ ${EUID} == 0 ]] ; then
+        PS1='\[\033[01;31m\]\u@\h \[\033[01;35m\]\A \[\033[01;34m\]\w \[\033[01;33m\]$(__git_ps1 "(%s)") \[\033[00m\]\n\$ '
+	else
+        PS1='\[\033[01;32m\]\u@\h \[\033[01;35m\]\A \[\033[01;34m\]\w \[\033[01;33m\]$(__git_ps1 "(%s)") \[\033[00m\]\n\$ '
+	fi
+
+	alias ls='ls --color=auto'
+	alias grep='grep --colour=auto'
+	alias egrep='egrep --colour=auto'
+	alias fgrep='fgrep --colour=auto'
+else
+	if [[ ${EUID} == 0 ]] ; then
+		# show root@ when we don't have colors
+		PS1='\u@\h \w \A\n\$ '
+	else
+		PS1='\u@\h \w \A\n\$ '
+	fi
+fi
+
+# Try to keep environment pollution down, EPA loves us.
+unset use_color safe_term match_lhs
+
+# You may uncomment the following lines if you want `ls' to be colorized:
+export LS_OPTIONS='--color=auto --group-directories-first'
+export GIT_PS1_SHOWDIRTYSTATE="true"
+eval "`dircolors`"
+alias ls='ls $LS_OPTIONS'
+alias grep='grep --colour=auto'
+export EDITOR=vim
+
