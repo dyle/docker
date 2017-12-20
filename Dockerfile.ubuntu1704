@@ -1,0 +1,51 @@
+# My base image for Ubuntu 17.04 installations
+FROM ubuntu:17.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV SHELL=/bin/bash
+
+# basic packages
+RUN apt-get update && apt-get upgrade
+RUN apt-get install -y apt-utils
+RUN apt-get install -y sudo vim vim-common git screen bash-completion build-essential htop tree man-db wget curl pwgen
+
+# shell and user
+RUN useradd -m dyle
+COPY install/etc/bash.bashrc.local /etc/
+COPY install/etc/vim/vimrc.local /etc/vim/
+COPY install/etc/screenrc /etc/
+COPY install/etc/bash.bashrc /tmp
+RUN cat /tmp/bash.bashrc >> /root/.bashrc
+RUN cat /tmp/bash.bashrc >> /home/dyle/.bashrc
+
+# git and vim
+COPY install/home/.gitconfig /root/
+COPY install/home/.gitconfig /home/dyle/
+COPY install/home/.vimrc /root/
+COPY install/home/.vim /root/.vim/
+COPY install/home/.vimrc /home/dyle/
+COPY install/home/.vim /home/dyle/.vim/
+
+# pull in Vundle vim packages
+RUN git clone https://github.com/vim-scripts/ctrlp.vim.git /home/dyle/.vim/bundle/ctrlp.vim
+RUN git clone https://github.com/vim-scripts/The-NERD-tree.git /home/dyle/.vim/bundle/The-NERD-tree
+RUN git clone https://github.com/vim-airline/vim-airline.git /home/dyle/.vim/bundle/vim-airline
+RUN git clone https://github.com/vim-airline/vim-airline-themes.git /home/dyle/.vim/bundle/vim-airline-themes
+RUN git clone https://github.com/airblade/vim-gitgutter.git /home/dyle/.vim/bundle/vim-gitgutter
+RUN git clone https://github.com/VundleVim/Vundle.vim.git /home/dyle/.vim/bundle/Vundle.vim
+RUN cp -r /home/dyle/.vim /root/
+
+# fix final group management and file permissions
+RUN usermod --groups adm,sudo,audio,video,staff,games,users dyle
+RUN chown -R dyle: /home/dyle/
+RUN chown -R root: /root
+
+# cleanup
+RUN apt-get autoremove
+RUN apt-get clean
+RUN apt-get purge
+
+WORKDIR /root
+
+VOLUME ["/home", "/srv", "/var"]
+
