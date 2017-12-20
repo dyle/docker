@@ -162,8 +162,8 @@ def run(args) -> None:
                                     detach=True,
                                     mounts=mounts,
                                     hostname=cnt_name,
-                                    tty=True)
-        cnt.restart()
+                                    tty=True,
+                                    restart_policy={"Name": "unless-stopped"})
     except Exception as e:
         sys.stderr.write('Failed to run container "%s": %s\n' % (cnt_name, str(e)))
         sys.exit(1)
