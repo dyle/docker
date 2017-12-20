@@ -4,7 +4,7 @@
 # ------------------------------------------------------------
 # dock-py - docker run
 #
-# Author: Oliver Maurhart <oliver.maurhart@ait.ac.at>
+# Author: Oliver Maurhart <dyle71@gmail.com>
 # ------------------------------------------------------------
 
 import argparse
