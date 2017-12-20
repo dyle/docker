@@ -1,0 +1,12 @@
+# ------------------------------------------------------------
+# requirements.txt
+#
+# In order to run the docker helper you'll need addiitonal packages installed.
+# Install them via:
+#
+#   $ pip3 install -r requirements.txt
+#
+# Oliver Maurhart, <dyle71@gmail.com>
+# ------------------------------------------------------------
+
+docker

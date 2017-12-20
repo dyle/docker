@@ -1,0 +1,253 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+# ------------------------------------------------------------
+# dock-py - docker run
+#
+# Author: Oliver Maurhart <oliver.maurhart@ait.ac.at>
+# ------------------------------------------------------------
+
+import argparse
+import os
+import sys
+from typing import Optional
+
+import docker
+from docker.errors import DockerException
+from docker.types import Mount
+
+
+def cmd(image) -> [str]:
+    """
+        Get the command of an image.
+
+        :param image:   the docker image
+        :return:        the list of commands
+    """
+    c = []
+    try:
+        c = image.attrs['ContainerConfig']['Cmd']
+        if not c:
+            c = []
+        if isinstance(c, str):
+            c = [c]
+    except KeyError:
+        pass
+    return c
+
+
+def create_volumes(image, name: str) -> list:
+    """
+        Create a list of volumes based on an image and a name.
+
+        :param image: the docker image
+        :param name:  the name under which the volumes will be created
+        :return:      a list of (src, dst) volume mount points
+    """
+    client = docker.from_env()
+    res = []
+    for v in volumes(image):
+        volume_name = name + v.replace(os.sep, '.')
+        try:
+            client.volumes.create(name=volume_name)
+        except DockerException as e:
+            sys.stderr.write('Failed to create volume "%s": %s\n' % (volume_name, str(e)))
+            sys.exit(1)
+        res = res + [(volume_name, v)]
+
+    return res
+
+
+def create_parser() -> argparse.ArgumentParser:
+    """
+        Declare common options for the command line.
+
+        :return:        an argparse parser
+    """
+    description = """
+    This is the docker run helper.
+    """
+    epilog = 'Oliver Maurhart, <dyle71@gmail.com>'
+    p = argparse.ArgumentParser(description=description, epilog=epilog)
+
+    p.add_argument('--version', action='version', version='dock-py V0.1')
+    sub_p = p.add_subparsers(help='commands')
+
+    p_images = sub_p.add_parser('images', help='list available images.')
+    p_images.add_argument('--tags', '-t', action='store_true', default=False,
+                          help='Only show image tags.')
+    p_images.set_defaults(func=run_images)
+
+    p_containers = sub_p.add_parser('containers', help='list available containers.')
+    p_containers.add_argument('--names', '-n', action='store_true', default=False,
+                              help='Only show container names.')
+    p_containers.set_defaults(func=run_containers)
+
+    p_run = sub_p.add_parser('run', help='start and run a container.')
+    p_run.set_defaults(func=run)
+    p_run.add_argument('image', metavar='IMAGE', nargs=1, help='The docker image to base a container on.')
+    p_run.add_argument('container', metavar='CONTAINER', nargs='+', help='The docker container name.')
+
+    p_run.set_defaults(func=run)
+
+    return p
+
+
+def entrypoint(image) -> [str]:
+    """
+        Get the entrypoint of an image.
+
+        :param image:   the docker image
+        :return:        the entrypoint command
+    """
+    e = []
+    try:
+        e = image.attrs['ContainerConfig']['Entrypoint']
+        if not e:
+            e = []
+        if isinstance(e, str):
+            e = [e]
+    except KeyError:
+        pass
+    return e
+
+
+def mounted_volumes() -> dict:
+    """
+        Retieve the current container -> [(src, type, dst)] settings on active volume mounts
+
+        :return:    a dict with {container_name: [(mount_src, type, mount_dst)]}
+    """
+    res = {}
+    client = docker.from_env()
+    df = client.df()
+
+    for cnt in df['Containers']:
+        mounts = []
+        for mnt in cnt['Mounts']:
+            mounts = mounts + [(mnt['Source'] or mnt['Name'], mnt['Type'], mnt['Destination'])]
+        name = cnt['Names'][0]
+        if name[0] == '/':
+            name = name[1:]
+        res[name] = mounts
+
+    return res
+
+
+def run(args) -> None:
+    """
+        Run a container based on an image.
+
+        :param args:    argparse arguments
+    """
+    client = docker.from_env()
+    img_name = args.image[0]
+    cnt_name = args.container[0]
+
+    try:
+        img = client.images.get(img_name)
+    except DockerException as e:
+        sys.stderr.write('Problem with docker image "%s": %s\n' % (img_name, str(e)))
+        sys.exit(1)
+    sys.stdout.write('Docker image: "%s" located.\n' % ', '.join(img.tags))
+
+    vols = create_volumes(img, cnt_name)
+    mounts = []
+    for v in vols:
+        mounts = mounts + [Mount(target=v[1], source=v[0])]
+
+    try:
+        cnt = client.containers.run(image=img_name,
+                                    name=cnt_name,
+                                    detach=True,
+                                    mounts=mounts,
+                                    hostname=cnt_name,
+                                    tty=True)
+        cnt.restart()
+    except Exception as e:
+        sys.stderr.write('Failed to run container "%s": %s\n' % (cnt_name, str(e)))
+        sys.exit(1)
+
+    sys.stdout.write('Started container "%s".\n' % cnt.name)
+
+
+def run_containers(args) -> None:
+    """
+        List available containers.
+
+        :param args:    argparse arguments
+    """
+    client = docker.from_env()
+    mounts = mounted_volumes()
+    for cnt in client.containers.list():
+        sys.stdout.write('%s\n' % cnt.name)
+        sys.stdout.write('     image:           %s\n' % ', '.join(cnt.image.tags))
+        sys.stdout.write('    status:           %s\n' % cnt.status)
+        if not args.names:
+            for mnt in mounts.get(cnt.name, []):
+                sys.stdout.write('     mount:           [host: %s] -(%s)-> [container: %s]\n' % mnt)
+
+
+def run_images(args) -> None:
+    """
+        List available images.
+
+        :param args:    argparse arguments
+    """
+    client = docker.from_env()
+    for img in client.images.list():
+        sys.stdout.write('%s\n' % ', '.join(img.tags))
+        if not args.tags:
+            sys.stdout.write('    id:               %s\n' % img.id)
+            sys.stdout.write('    cmd:              %s\n' % ' '.join(cmd(img)))
+            sys.stdout.write('    entrypoint:       %s\n' % ' '.join(entrypoint(img)))
+            for v in volumes(img):
+                sys.stdout.write('    published volume: %s\n' % v)
+            wd = working_dir(img)
+            if wd:
+                sys.stdout.write('    working dir:      %s\n' % wd)
+
+
+def volumes(image) -> list:
+    """
+        Get the volumes of an docker image.
+
+        :param image:   the docker image
+        :return:        the list of published volumes
+    """
+    v = []
+    try:
+        v = image.attrs['ContainerConfig']['Volumes']
+        if not v:
+            v = []
+    except KeyError:
+        pass
+    return v
+
+
+def working_dir(image) -> Optional[str]:
+    """
+        Get the working directory of an image.
+
+        :param image:   the docker image
+        :return:        a string of the working dir (or None)
+    """
+    wd = None
+    try:
+        wd = image.attrs['ContainerConfig']['WorkingDir']
+    except KeyError:
+        pass
+    return wd
+
+
+if __name__ == '__main__':
+
+    """Here we go!"""
+    parser = create_parser()
+    args = parser.parse_args()
+
+    if 'func' not in dir(args):
+        parser.print_help()
+        sys.exit(1)
+
+    sys.exit(args.func(args))
