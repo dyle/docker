@@ -14,9 +14,9 @@ The resulting image fits *my* needs. Feel free to use them if you want to.
 
 # About the `dock-py` tool:
 
-This tiny little tool creates is capable of listing all
-* docker images along their published volumes
-* docker container and which volume they have currently mounted
+This tiny little tool is capable of listing all.
+* docker images along their published volumes.
+* docker container and which volume they have currently mounted.
 * create a container, automatically create and mount all published volumes of the 
 docker container image.
 
@@ -28,6 +28,8 @@ In order to have this tool running you should install the docker python package
 Example usage:
 
 #### List all images:
+
+The main purpose is to list all published volumes of an image.
 
     $ dock-py images
     dyle71/ubuntu:17.10
@@ -57,6 +59,8 @@ Example usage:
 
 #### List all containers:
 
+This shows which container has mounted a particular volume of the host system.
+
     $ dock-py containers
     ubuntu.17.10                                                                                                                                                                                                                                                                                                
          image:           dyle71/ubuntu:17.10                                                                                                                                                                                                                                                                   
@@ -78,7 +82,7 @@ Example usage:
          mount:           [host: /var/lib/docker/volumes/debian.9.var/_data] -(volume)-> [container: /var]
 
 
-#### Automatically mount all published volumes of a container:
+#### Automatically create and mount all published volumes of a container:
 
     $ dock-py run dyle71/debian:9 test_debian
 

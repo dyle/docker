@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # ------------------------------------------------------------
-# dock-py - docker run
+# dock-py - automatically create docker volumes and mount them
 #
 # Author: Oliver Maurhart <dyle71@gmail.com>
 # ------------------------------------------------------------
@@ -36,6 +36,42 @@ def cmd(image) -> [str]:
     return c
 
 
+def create_parser() -> argparse.ArgumentParser:
+    """
+        Declare common options for the command line.
+
+        :return:        an argparse parser
+    """
+    description = """
+    This is the dock-py helper: automaictally create docker volumes 
+    based on an image and mount them in a new container.
+    """
+    epilog = 'Oliver Maurhart, <dyle71@gmail.com>'
+    p = argparse.ArgumentParser(description=description, epilog=epilog)
+
+    p.add_argument('--version', action='version', version='dock-py V0.1')
+    sub_p = p.add_subparsers(help='commands')
+
+    p_images = sub_p.add_parser('images', help='list available images.')
+    p_images.add_argument('--tags', '-t', action='store_true', default=False,
+                          help='Only show image tags.')
+    p_images.set_defaults(func=run_images)
+
+    p_containers = sub_p.add_parser('containers', help='list available containers.')
+    p_containers.add_argument('--names', '-n', action='store_true', default=False,
+                              help='Only show container names.')
+    p_containers.set_defaults(func=run_containers)
+
+    p_run = sub_p.add_parser('run', help='start and run a container.')
+    p_run.add_argument('image', metavar='IMAGE', nargs=1, help='The docker image to base a container on.')
+    p_run.add_argument('container', metavar='CONTAINER', nargs=1, help='The docker container name.')
+    p_run.set_defaults(func=run)
+
+    p_run.set_defaults(func=run)
+
+    return p
+
+
 def create_volumes(image, name: str) -> list:
     """
         Create a list of volumes based on an image and a name.
@@ -56,41 +92,6 @@ def create_volumes(image, name: str) -> list:
         res = res + [(volume_name, v)]
 
     return res
-
-
-def create_parser() -> argparse.ArgumentParser:
-    """
-        Declare common options for the command line.
-
-        :return:        an argparse parser
-    """
-    description = """
-    This is the docker run helper.
-    """
-    epilog = 'Oliver Maurhart, <dyle71@gmail.com>'
-    p = argparse.ArgumentParser(description=description, epilog=epilog)
-
-    p.add_argument('--version', action='version', version='dock-py V0.1')
-    sub_p = p.add_subparsers(help='commands')
-
-    p_images = sub_p.add_parser('images', help='list available images.')
-    p_images.add_argument('--tags', '-t', action='store_true', default=False,
-                          help='Only show image tags.')
-    p_images.set_defaults(func=run_images)
-
-    p_containers = sub_p.add_parser('containers', help='list available containers.')
-    p_containers.add_argument('--names', '-n', action='store_true', default=False,
-                              help='Only show container names.')
-    p_containers.set_defaults(func=run_containers)
-
-    p_run = sub_p.add_parser('run', help='start and run a container.')
-    p_run.set_defaults(func=run)
-    p_run.add_argument('image', metavar='IMAGE', nargs=1, help='The docker image to base a container on.')
-    p_run.add_argument('container', metavar='CONTAINER', nargs='+', help='The docker container name.')
-
-    p_run.set_defaults(func=run)
-
-    return p
 
 
 def entrypoint(image) -> [str]:
@@ -114,7 +115,7 @@ def entrypoint(image) -> [str]:
 
 def mounted_volumes() -> dict:
     """
-        Retieve the current container -> [(src, type, dst)] settings on active volume mounts
+        Retrieve the current container -> [(src, type, dst)] settings on active volume mounts
 
         :return:    a dict with {container_name: [(mount_src, type, mount_dst)]}
     """
@@ -185,7 +186,7 @@ def run_containers(args) -> None:
         sys.stdout.write('    status:           %s\n' % cnt.status)
         if not args.names:
             for mnt in mounts.get(cnt.name, []):
-                sys.stdout.write('     mount:           [host: %s] -(%s)-> [container: %s]\n' % mnt)
+                sys.stdout.write('     mount:           [host: %s] <-(%s)-> [container: %s]\n' % mnt)
 
 
 def run_images(args) -> None:
