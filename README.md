@@ -96,4 +96,3 @@ they will be created.
 * specify docker container restart policy on the command line. This is currently 
 "until-stopped".
 * specify port binding on the command line. This is currently not supported at all.
-* bug: drop multiple containers on the command line.
