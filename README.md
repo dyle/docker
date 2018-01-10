@@ -20,8 +20,7 @@ The most essenital part of the bash tweaks, vim plugins, etc. is done from withi
 If you have a user ready who is a sudoer and wget installed, then the most easy way
 is
 
-    $ wget https://raw.githubusercontent.com/dyle/docker/master/install/bootstrap.sh
-    $ . bootstrap.sh
+    $ wget https://raw.githubusercontent.com/dyle/docker/master/install/bootstrap.sh && . bootstrap.sh
 
 This will pull in all packages for the current user and for the root user.
 
