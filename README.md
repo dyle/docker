@@ -12,15 +12,32 @@ The Dockerfiles create images with
 
 The resulting image fits *my* needs. Feel free to use them if you want to.
 
+# Quick bootstrap of my environment
+
+The most essenital part of the bash tweaks, vim plugins, etc. is done from within the
+`install` folder.
+
+If you have a user ready who is a sudoer and wget installed, then the most easy way
+is
+
+    $ wget https://raw.githubusercontent.com/dyle/docker/master/install/bootstrap.sh
+    $ . bootstrap.sh
+
+This will pull in all packages for the current user and for the root user.
+
+**BEWARE**: Please check the installment instructions at `install/install.sh` carefully
+and remove any unwanted installments or system changes!
+
+
 # About the `dock-py` tool:
 
 This tiny little tool is capable of listing all.
 * docker images along their published volumes.
 * docker container and which volume they have currently mounted.
-* create a container, automatically create and mount all published volumes of the 
+* create a container, automatically create and mount all published volumes of the
 docker container image.
 
-In order to have this tool running you should install the docker python package 
+In order to have this tool running you should install the docker python package
 (https://pypi.python.org/pypi/docker/2.7.0) via:
 
     $ pip3 install -r requirements.txt
@@ -86,13 +103,13 @@ This shows which container has mounted a particular volume of the host system.
 
     $ dock-py run dyle71/debian:9 test_debian
 
-Note: the published volumes in the image (`/home`, `/srv` and `/var`) are labeled 
-`test_debian.home`, `test_debian.srv` and `test_debian.var`. If they to not exist, 
+Note: the published volumes in the image (`/home`, `/srv` and `/var`) are labeled
+`test_debian.home`, `test_debian.srv` and `test_debian.var`. If they to not exist,
 they will be created.
 
 
 ## dock-py TODOs
 
-* specify docker container restart policy on the command line. This is currently 
+* specify docker container restart policy on the command line. This is currently
 "until-stopped".
 * specify port binding on the command line. This is currently not supported at all.
