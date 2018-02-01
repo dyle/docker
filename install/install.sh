@@ -6,7 +6,7 @@ USERNAME='someuser'
 # basic packages
 apt-get update && apt-get upgrade
 apt-get install -y apt-utils
-apt-get install -y sudo vim vim-common git screen bash-completion build-essential htop tree man-db
+apt-get install -y sudo vim vim-common git screen bash-completion build-essential htop openssh-client tree man-db
 
 # shell and user
 cp -rv etc/bash.bashrc.local /etc/
@@ -23,6 +23,7 @@ cp -rv home/.vimrc /root/
 cp -rv home/.vim /root/.vim/
 cp -rv home/.vimrc /home/${USERNAME}/
 cp -rv home/.vim /home/${USERNAME}/.vim/
+cp -rv home/.ssh /home/${USERNAME}/.ssh/
 
 # pull in Vundle vim packages
 git clone https://github.com/vim-scripts/ctrlp.vim.git /home/${USERNAME}/.vim/bundle/ctrlp.vim
